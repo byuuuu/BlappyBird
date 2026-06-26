@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Android Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            overflow: hidden;
+        }
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        /* Android Shell Glow */
+        .phone-shadow {
+            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.25);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center p-2 sm:p-4">
+
+<div class="relative w-full max-w-[410px] h-[92vh] max-h-[820px] bg-slate-900 rounded-[48px] border-[10px] border-slate-800 flex flex-col overflow-hidden phone-shadow">
+    
+    <!-- Top Notch/Camera of the simulated phone -->
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-800 rounded-full z-50 flex items-center justify-center">
+        <div class="w-3 h-3 rounded-full bg-slate-900 border border-slate-700"></div>
+        <div class="w-12 h-1 bg-slate-900 rounded-full ml-4"></div>
+    </div>
+
+    <!-- Simulated Status Bar -->
+    <div class="w-full h-8 bg-slate-950/40 backdrop-blur-md flex justify-between items-center px-6 text-[11px] text-slate-300 font-semibold z-40 select-none pt-2">
+        <span id="android-time">12:00</span>
+        <div class="flex items-center gap-2">
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-signal"></i>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px]">98%</span>
+                <i class="fas fa-battery-three-quarters text-emerald-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative flex-1 w-full bg-gradient-to-b from-[#4ec0ca] to-[#3ba3b5] overflow-hidden flex flex-col">
+        
+        <!-- Game Canvas Background & Render Zone -->
+        <canvas id="gameCanvas" class="absolute inset-0 w-full h-full block z-10"></canvas>
+
+        <!-- Main Menu Overlay -->
+        <div id="ui-menu" class="absolute inset-0 z-20 flex flex-col justify-between p-6 select-none">
+            <div class="text-center mt-12 animate-bounce">
+                <h1 class="pixel-font text-3xl text-yellow-300 drop-shadow-[0_4px_0_rgba(0,0,0,0.7)] tracking-wider">FLAPPY</h1>
+                <h1 class="pixel-font text-3xl text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.7)] tracking-wider mt-1">BIRD</h1>
+                <p class="text-[10px] text-yellow-100 uppercase tracking-widest font-bold mt-2 bg-slate-900/40 py-1 px-3 rounded-full inline-block">Android Edition</p>
+            </div>
+
+            <!-- Dashboard stats -->
+            <div class="bg-black/40 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-white flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-slate-300">Skor Tertinggi:</span>
+                    <span id="best-score-display" class="pixel-font text-sm text-yellow-400">0</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-white/5 pt-2">
+                    <span class="text-xs text-slate-300">Total Koin:</span>
+                    <span class="flex items-center gap-1 text-yellow-400 font-bold">
+                        <i class="fas fa-coins text-yellow-500"></i>
+                        <span id="total-coins-display" class="pixel-font text-xs">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex flex-col gap-3 mb-4">
+                <button id="btn-play" class="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-play text-xl"></i>
+                    MULAI GAME
+                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-shop" class="bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold py-3 rounded-2xl shadow-md border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i class="fas fa-store"></i> Toko Skin
+                    </button>
+                    <button id="btn-settings" class="bg-gradient-to-r from-slate-600 to-slate-700 text-white font-bold py-3 rounded-2xl shadow-md border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i class="fas fa-cog"></i> Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ui-get-ready" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/30 text-white select-none">
+            <div class="text-center p-6 rounded-3xl animate-pulse">
+                <h2 class="pixel-font text-lg text-yellow-300 drop-shadow-md mb-6">SIAP-SIAP!</h2>
+                
+                <!-- Tap Icon Vector -->
+                <div class="w-20 h-20 mx-auto my-4 relative flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full bg-white/10 animate-ping"></div>
+                    <i class="fas fa-hand-pointer text-4xl text-white transform -rotate-12"></i>
+                </div>
+                
+                <p class="font-bold text-sm tracking-wide mt-4">Ketuk layar ponsel untuk terbang</p>
+                <p class="text-[10px] text-slate-300 mt-1">(Atau tekan tombol SPASI pada keyboard)</p>
+            </div>
+        </div>
+
+        <div id="ui-gameover" class="hidden absolute inset-0 z-20 flex flex-col justify-between p-6 select-none bg-black/40 backdrop-blur-xs">
+            <div class="text-center mt-10">
+                <h2 class="pixel-font text-2xl text-red-500 drop-shadow-[0_2px_0_rgba(0,0,0,0.8)] tracking-wide animate-bounce">PERMAINAN SELESAI</h2>
+            </div>
+
+            <!-- Scorecard Panel -->
+            <div class="bg-gradient-to-b from-amber-50 to-amber-100 rounded-3xl p-5 border-4 border-amber-900 shadow-xl text-amber-950 flex flex-col gap-3 transform scale-95 transition-transform">
+                <div class="text-center pb-2 border-b border-amber-800/20">
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-amber-800">Skor Akhir</span>
+                    <div id="gameover-score" class="pixel-font text-3xl text-emerald-600 drop-shadow-sm mt-1">0</div>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-amber-900">Rekor Terbaik:</span>
+                    <span id="gameover-best" class="pixel-font text-sm text-yellow-600">0</span>
+                </div>
+
+                <div class="flex justify-between items-center border-t border-amber-800/10 pt-2">
+                    <span class="text-xs font-bold text-amber-900">Koin Diperoleh:</span>
+                    <span class="flex items-center gap-1 text-yellow-600 font-bold">
+                        <i class="fas fa-coins"></i>
+                        <span id="gameover-coins" class="pixel-font text-xs">+0</span>
+                    </span>
+                </div>
+
+                <!-- Medal Badge -->
+                <div id="medal-container" class="flex items-center gap-3 bg-amber-200/50 p-2 rounded-xl border border-amber-300 mt-1">
+                    <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center border-2 border-yellow-600 shadow-inner">
+                        <i class="fas fa-medal text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-extrabold text-amber-950" id="medal-title">Medali Perunggu</div>
+                        <div class="text-[9px] text-amber-800">Kerja bagus, latih terus kemampuanmu!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Play again, shop & home buttons -->
+            <div class="flex flex-col gap-3 mb-4">
+                <button id="btn-restart" class="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-redo"></i> MAIN LAGI
+                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-home" class="bg-gradient-to-r from-slate-600 to-slate-700 text-white font-bold py-3 rounded-2xl shadow-md border-b-4 border-slate-950 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i class="fas fa-home"></i> Menu Utama
+                    </button>
+                    <button id="btn-gameover-shop" class="bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold py-3 rounded-2xl shadow-md border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i class="fas fa-store"></i> Toko
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ui-shop" class="hidden absolute inset-0 z-30 flex flex-col justify-between p-6 bg-slate-950/95 text-white select-none">
+            <div>
+                <div class="flex justify-between items-center mt-6 pb-4 border-b border-slate-800">
+                    <button id="btn-close-shop" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700">
+                        <i class="fas fa-arrow-left text-sm"></i>
+                    </button>
+                    <h2 class="pixel-font text-sm text-yellow-400">TOKO SKIN</h2>
+                    <div class="flex items-center gap-1 text-yellow-400 font-bold bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/20">
+                        <i class="fas fa-coins text-xs"></i>
+                        <span id="shop-coins-display" class="pixel-font text-[10px]">0</span>
+                    </div>
+                </div>
+
+                <!-- Skin Grid Container -->
+                <div class="grid grid-cols-1 gap-3 overflow-y-auto max-h-[360px] mt-4 pr-1" id="shop-skins-list">
+                    <!-- Shop Items dynamically populated in JS -->
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 mb-4 text-center">
+                <p class="text-[10px] text-slate-400">Dapatkan Koin emas berharga saat melompati pipa rintangan!</p>
+            </div>
+        </div>
+
+        <div id="ui-settings" class="hidden absolute inset-0 z-30 flex flex-col justify-between p-6 bg-slate-950/95 text-white select-none">
+            <div>
+                <div class="flex justify-between items-center mt-6 pb-4 border-b border-slate-800">
+                    <button id="btn-close-settings" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700">
+                        <i class="fas fa-arrow-left text-sm"></i>
+                    </button>
+                    <h2 class="pixel-font text-sm text-sky-400">PENGATURAN</h2>
+                    <div class="w-8"></div>
+                </div>
+
+                <!-- Settings list -->
+                <div class="flex flex-col gap-4 mt-6">
+                    <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                        <div>
+                            <div class="font-bold text-sm">Efek Suara</div>
+                            <div class="text-[10px] text-slate-400">Mainkan audio retro</div>
+                        </div>
+                        <button id="toggle-sound" class="w-14 h-8 bg-emerald-500 rounded-full p-1 transition-all flex items-center justify-end">
+                            <div class="w-6 h-6 rounded-full bg-white shadow-md"></div>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                        <div>
+                            <div class="font-bold text-sm">Getaran Layar</div>
+                            <div class="text-[10px] text-slate-400">Efek getar saat terjadi tabrakan</div>
+                        </div>
+                        <button id="toggle-shake" class="w-14 h-8 bg-emerald-500 rounded-full p-1 transition-all flex items-center justify-end">
+                            <div class="w-6 h-6 rounded-full bg-white shadow-md"></div>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                        <div>
+                            <div class="font-bold text-sm">Tingkat Kesulitan</div>
+                            <div class="text-[10px] text-slate-400">Menentukan kecepatan awal rintangan</div>
+                        </div>
+                        <select id="difficulty-select" class="bg-slate-850 border border-slate-700 text-xs rounded-xl px-3 py-1 font-semibold text-sky-300 outline-none">
+                            <option value="easy">Santai</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="hard">Ahli</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mb-4 text-slate-500 text-[10px]">
+                <p>Flappy Bird Android Edition v2.6.0</p>
+                <p class="mt-1">Dibuat menggunakan Canvas API & HTML5</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Simulated Android Navigation Bar -->
+    <div class="w-full h-11 bg-slate-950 flex justify-around items-center text-slate-400 text-sm z-40 select-none pb-1">
+        <button id="android-back" class="w-12 h-12 flex items-center justify-center hover:text-white transition-colors">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button id="android-home" class="w-12 h-12 flex items-center justify-center hover:text-white transition-colors">
+            <div class="w-4 h-4 rounded-md border-2 border-slate-400 hover:border-white transition-colors"></div>
+        </button>
+        <button id="android-recents" class="w-12 h-12 flex items-center justify-center hover:text-white transition-colors">
+            <div class="w-4 h-4 rounded-xs border-2 border-slate-400 hover:border-white transition-colors"></div>
+        </button>
+    </div>
+
+</div>
+
+<script>
+class AudioEngine {
+    constructor() {
+        this.ctx = null;
+        this.enabled = true;
+    }
+
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    playFlap() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(350, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+    }
+
+    playScore() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.08); // E5
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+    }
+
+    playCoin() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+    }
+
+    playHit() {
+        if (!this.enabled) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.35);
+    }
+}
+
+const audio = new AudioEngine();
+
+const SKINS = [
+    { id: 'classic', name: 'Klasik', color: '#fbbf24', eyeColor: '#000000', price: 0, desc: 'Burung petualang sejati.', unlocked: true },
+    { id: 'cyber', name: 'Cyber Neon', color: '#06b6d4', eyeColor: '#ec4899', price: 15, desc: 'Dibawa langsung dari masa depan.', unlocked: false },
+    { id: 'bat', name: 'Bat-Bird', color: '#374151', eyeColor: '#ef4444', price: 30, desc: 'Pahlawan malam pembasmi pipa.', unlocked: false },
+    { id: 'golden', name: 'Golden Champion', color: '#eab308', eyeColor: '#ffffff', price: 60, desc: 'Lapis emas murni 24 karat.', unlocked: false }
+];
+
+/* Local Storage Cache */
+let state = {
+    highScore: parseInt(localStorage.getItem('fb_highScore')) || 0,
+    coins: parseInt(localStorage.getItem('fb_coins')) || 0,
+    selectedSkin: localStorage.getItem('fb_selectedSkin') || 'classic',
+    unlockedSkins: JSON.parse(localStorage.getItem('fb_unlockedSkins')) || ['classic'],
+    soundEnabled: localStorage.getItem('fb_soundEnabled') !== 'false',
+    screenShake: localStorage.getItem('fb_screenShake') !== 'false',
+    difficulty: localStorage.getItem('fb_difficulty') || 'normal'
+};
+
+audio.enabled = state.soundEnabled;
+
+function saveState() {
+    localStorage.setItem('fb_highScore', state.highScore);
+    localStorage.setItem('fb_coins', state.coins);
+    localStorage.setItem('fb_selectedSkin', state.selectedSkin);
+    localStorage.setItem('fb_unlockedSkins', JSON.stringify(state.unlockedSkins));
+    localStorage.setItem('fb_soundEnabled', state.soundEnabled);
+    localStorage.setItem('fb_screenShake', state.screenShake);
+    localStorage.setItem('fb_difficulty', state.difficulty);
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameInterval = null;
+let gameState = 'MENU'; // MENU, GETREADY, PLAYING, GAMEOVER
+let score = 0;
+let coinsEarnedThisRun = 0;
+let shakeTime = 0;
+
+// Game physics
+let gravity = 0.4;
+let jumpForce = -7.5;
+let speedFactor = 2.4;
+let pipeGap = 135;
+
+// Elements Arrays
+let pipes = [];
+let coins = [];
+let particles = [];
+let backgrounds = {
+    clouds: [],
+    city: [],
+    groundOffset: 0
+};
+
+// Player Object
+const bird = {
+    x: 80,
+    y: 200,
+    radius: 14,
+    velocity: 0,
+    rotation: 0,
+    flapFrame: 0,
+    flapSpeed: 0.15
+};
+
+function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    
+    // Setup background static entities once resized
+    if(backgrounds.clouds.length === 0) {
+        for(let i = 0; i < 4; i++) {
+            backgrounds.clouds.push({
+                x: Math.random() * canvas.width * 1.5,
+                y: Math.random() * 100 + 40,
+                speed: 0.2 + Math.random() * 0.3,
+                scale: 0.6 + Math.random() * 0.5
+            });
+        }
+    }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function drawSkyGradient() {
+    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, '#3ba3b5');
+    grad.addColorStop(0.5, '#56cbd8');
+    grad.addColorStop(0.8, '#bee9ee');
+    grad.addColorStop(1, '#e3f7f8');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawClouds() {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    backgrounds.clouds.forEach(cloud => {
+        if (gameState === 'PLAYING') {
+            cloud.x -= cloud.speed;
+            if (cloud.x < -100) cloud.x = canvas.width + 50;
+        }
+        
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, 20 * cloud.scale, 0, Math.PI * 2);
+        ctx.arc(cloud.x + 15 * cloud.scale, cloud.y - 10 * cloud.scale, 25 * cloud.scale, 0, Math.PI * 2);
+        ctx.arc(cloud.x + 35 * cloud.scale, cloud.y, 20 * cloud.scale, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function drawCityParallax() {
+    // City Skyline Vector Drawing
+    ctx.fillStyle = 'rgba(100, 180, 190, 0.4)';
+    const buildingWidth = 45;
+    for (let i = -10; i < canvas.width + buildingWidth; i += buildingWidth) {
+        let height = 120 + Math.sin(i * 0.05) * 40;
+        ctx.fillRect(i, canvas.height - height - 80, buildingWidth - 5, height);
+    }
+}
+
+function drawGround() {
+    const groundHeight = 80;
+    const y = canvas.height - groundHeight;
+    
+    // Draw Ground Body
+    ctx.fillStyle = '#dfd694';
+    ctx.fillRect(0, y, canvas.width, groundHeight);
+    
+    // Draw Green Grass Line
+    ctx.fillStyle = '#73bf2e';
+    ctx.fillRect(0, y, canvas.width, 14);
+    
+    // Draw Grass Accents
+    ctx.fillStyle = '#5c9e22';
+    ctx.fillRect(0, y + 14, canvas.width, 4);
+
+    // Decorative ground stripes scrolling
+    if (gameState === 'PLAYING') {
+        backgrounds.groundOffset = (backgrounds.groundOffset - speedFactor) % 24;
+    }
+    
+    ctx.strokeStyle = '#dfcfa5';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = backgrounds.groundOffset; i < canvas.width + 24; i += 24) {
+        ctx.moveTo(i, y + 18);
+        ctx.lineTo(i - 10, y + 80);
+    }
+    ctx.stroke();
+}
+
+function createFlapParticles(x, y) {
+    for (let i = 0; i < 5; i++) {
+        particles.push({
+            x: x - 10,
+            y: y,
+            vx: -1.5 - Math.random() * 2,
+            vy: (Math.random() - 0.5) * 3,
+            size: 3 + Math.random() * 4,
+            color: 'rgba(255, 255, 255, 0.8)',
+            alpha: 1,
+            decay: 0.04
+        });
+    }
+}
+
+function createCoinSparkles(x, y) {
+    for (let i = 0; i < 10; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            size: 2 + Math.random() * 3,
+            color: '#fbbf24',
+            alpha: 1,
+            decay: 0.03
+        });
+    }
+}
+
+function updateAndDrawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+        
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
+        if (p.alpha <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+}
+
+function drawBird() {
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.rotate(bird.rotation);
+
+    const skin = SKINS.find(s => s.id === state.selectedSkin) || SKINS[0];
+
+    // Glow Effect for Cyber Neon Skin
+    if (skin.id === 'cyber') {
+        ctx.shadowColor = skin.color;
+        ctx.shadowBlur = 10;
+    }
+
+    // Bird body (Circular)
+    ctx.fillStyle = skin.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, bird.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#000000';
+    ctx.stroke();
+
+    // Reset shadow for details
+    ctx.shadowBlur = 0;
+
+    // Wing movement based on bird animation frame
+    bird.flapFrame += bird.flapSpeed;
+    const wingY = Math.sin(bird.flapFrame) * 4;
+
+    // Wing
+    ctx.fillStyle = skin.id === 'bat' ? '#1f2937' : 'rgba(255,255,255,0.7)';
+    ctx.beginPath();
+    ctx.ellipse(-6, wingY, 7, 5, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Eye base
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(5, -4, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Pupil
+    ctx.fillStyle = skin.eyeColor;
+    ctx.beginPath();
+    ctx.arc(6, -4, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#f97316'; // Orange Beak
+    ctx.beginPath();
+    ctx.moveTo(11, -2);
+    ctx.lineTo(19, 2);
+    ctx.lineTo(11, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function spawnPipes() {
+    const minHeight = 50;
+    const maxHeight = canvas.height - pipeGap - 80 - minHeight;
+    const topHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+    const bottomHeight = canvas.height - pipeGap - 80 - topHeight;
+
+    const x = canvas.width + 100;
+    pipes.push({
+        x: x,
+        topHeight: topHeight,
+        bottomHeight: bottomHeight,
+        width: 60,
+        passed: false
+    });
+
+    // 40% chance of spawning a coin inside the gap
+    if (Math.random() < 0.45) {
+        coins.push({
+            x: x + 30, // Centered inside the pipe
+            y: topHeight + (pipeGap / 2),
+            radius: 9,
+            collected: false,
+            pulse: 0
+        });
+    }
+}
+
+function updateAndDrawPipesAndCoins() {
+    // Pipe drawing styles
+    const pipeColor = '#73bf2e';
+    const pipeStroke = '#558a22';
+    const pipeShadow = '#385a16';
+
+    // Pipes updating loop
+    for (let i = pipes.length - 1; i >= 0; i--) {
+        const pipe = pipes[i];
+        pipe.x -= speedFactor;
+
+        // Draw top pipe
+        ctx.fillStyle = pipeColor;
+        ctx.fillRect(pipe.x, 0, pipe.width, pipe.topHeight);
+        
+        // Top pipe lip (border-lip)
+        ctx.fillStyle = '#94e049';
+        ctx.fillRect(pipe.x - 4, pipe.topHeight - 20, pipe.width + 8, 20);
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(pipe.x - 4, pipe.topHeight - 20, pipe.width + 8, 20);
+        
+        // Black outline for main pipe body
+        ctx.strokeRect(pipe.x, -5, pipe.width, pipe.topHeight + 5);
+
+        // Draw bottom pipe
+        const bY = canvas.height - pipe.bottomHeight - 80;
+        ctx.fillStyle = pipeColor;
+        ctx.fillRect(pipe.x, bY, pipe.width, pipe.bottomHeight);
+        
+        // Bottom pipe lip
+        ctx.fillStyle = '#94e049';
+        ctx.fillRect(pipe.x - 4, bY, pipe.width + 8, 20);
+        ctx.strokeRect(pipe.x - 4, bY, pipe.width + 8, 20);
+        ctx.strokeRect(pipe.x, bY, pipe.width, pipe.bottomHeight + 5);
+
+        // Check score passing trigger
+        if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+            pipe.passed = true;
+            score++;
+            audio.playScore();
+        }
+
+        // Garbage collection
+        if (pipe.x < -100) {
+            pipes.splice(i, 1);
+        }
+    }
+
+    // Coins updating loop
+    for (let i = coins.length - 1; i >= 0; i--) {
+        const coin = coins[i];
+        coin.x -= speedFactor;
+        coin.pulse += 0.1;
+
+        // Rotating gold vector look
+        const rScale = Math.abs(Math.sin(coin.pulse));
+        
+        ctx.save();
+        ctx.translate(coin.x, coin.y);
+        ctx.scale(rScale, 1);
+
+        // Outer shine
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(0, 0, coin.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ca8a04';
+        ctx.stroke();
+
+        // Inner core
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.arc(0, 0, coin.radius - 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Coin collection trigger
+        const dist = Math.hypot(bird.x - coin.x, bird.y - coin.y);
+        if (dist < bird.radius + coin.radius) {
+            createCoinSparkles(coin.x, coin.y);
+            state.coins++;
+            coinsEarnedThisRun++;
+            audio.playCoin();
+            saveState();
+            updateDashboardDisplay();
+            coins.splice(i, 1);
+            continue;
+        }
+
+        if (coin.x < -100) {
+            coins.splice(i, 1);
+        }
+    }
+}
+
+function updatePhysics() {
+    if (gameState === 'PLAYING') {
+        bird.velocity += gravity;
+        bird.y += bird.velocity;
+
+        // Smooth orientation/rotation logic
+        if (bird.velocity < 3) {
+            bird.rotation = -0.3; // Angle pointing slightly upwards
+        } else if (bird.velocity > 6) {
+            bird.rotation = Math.min(Math.PI / 2, bird.rotation + 0.1); // Angle tipping downwards
+        } else {
+            bird.rotation += 0.05;
+        }
+
+        // Boundary safety collisions (ground level & ceiling level)
+        const groundY = canvas.height - 80;
+        if (bird.y + bird.radius >= groundY) {
+            bird.y = groundY - bird.radius;
+            triggerGameOver();
+        }
+        if (bird.y - bird.radius <= 0) {
+            bird.y = bird.radius;
+            bird.velocity = 0.5;
+        }
+
+        // Pipe collisions checking
+        pipes.forEach(pipe => {
+            const bX1 = bird.x - bird.radius;
+            const bX2 = bird.x + bird.radius;
+            const bY1 = bird.y - bird.radius;
+            const bY2 = bird.y + bird.radius;
+
+            const pX1 = pipe.x;
+            const pX2 = pipe.x + pipe.width;
+
+            // Box boundaries collision
+            if (bX2 > pX1 && bX1 < pX2) {
+                if (bY1 < pipe.topHeight || bY2 > canvas.height - pipe.bottomHeight - 80) {
+                    triggerGameOver();
+                }
+            }
+        });
+    } else if (gameState === 'GETREADY') {
+        // Floating smooth hover on get ready
+        bird.y = (canvas.height / 2.2) + Math.sin(Date.now() * 0.005) * 8;
+        bird.rotation = 0;
+    }
+}
+
+function triggerGameOver() {
+    if (gameState === 'GAMEOVER') return;
+    
+    gameState = 'GAMEOVER';
+    audio.playHit();
+    
+    if (state.screenShake) {
+        shakeTime = 15; // Activate Screen shake duration
+    }
+
+    // Determine records logic
+    let earnedMedal = 'None';
+    if (score >= 40) earnedMedal = 'Emas';
+    else if (score >= 20) earnedMedal = 'Perak';
+    else if (score >= 5) earnedMedal = 'Perunggu';
+
+    if (score > state.highScore) {
+        state.highScore = score;
+        saveState();
+    }
+
+    // Save newly earned coins
+    saveState();
+
+    // Populate Game Over Panel Overlay
+    document.getElementById('gameover-score').innerText = score;
+    document.getElementById('gameover-best').innerText = state.highScore;
+    document.getElementById('gameover-coins').innerText = `+${coinsEarnedThisRun}`;
+
+    const medalTitle = document.getElementById('medal-title');
+    const medalContainer = document.getElementById('medal-container');
+    const medalIcon = medalContainer.querySelector('.w-10');
+    
+    if (earnedMedal === 'Emas') {
+        medalTitle.innerText = "Medali Emas 🥇";
+        medalContainer.classList.remove('hidden');
+        medalIcon.className = "w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center border-2 border-yellow-600 shadow-inner";
+    } else if (earnedMedal === 'Perak') {
+        medalTitle.innerText = "Medali Perak 🥈";
+        medalContainer.classList.remove('hidden');
+        medalIcon.className = "w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center border-2 border-slate-500 shadow-inner";
+    } else if (earnedMedal === 'Perunggu') {
+        medalTitle.innerText = "Medali Perunggu 🥉";
+        medalContainer.classList.remove('hidden');
+        medalIcon.className = "w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center border-2 border-amber-800 shadow-inner";
+    } else {
+        medalContainer.classList.add('hidden');
+    }
+
+    // Toggle panels visibility
+    document.getElementById('ui-gameover').classList.remove('hidden');
+}
+
+let spawnTimer = 0;
+function drawLoop() {
+    // Implement screen shake rendering transformation
+    ctx.save();
+    if (shakeTime > 0) {
+        const dx = (Math.random() - 0.5) * 8;
+        const dy = (Math.random() - 0.5) * 8;
+        ctx.translate(dx, dy);
+        shakeTime--;
+    }
+
+    // Draw world assets
+    drawSkyGradient();
+    drawClouds();
+    drawCityParallax();
+
+    // Spawn and update pipe elements
+    if (gameState === 'PLAYING') {
+        spawnTimer++;
+        // Dynamic spawning speed intervals
+        let spawnThreshold = state.difficulty === 'hard' ? 85 : state.difficulty === 'normal' ? 100 : 120;
+        if (spawnTimer >= spawnThreshold) {
+            spawnPipes();
+            spawnTimer = 0;
+        }
+    }
+
+    updateAndDrawPipesAndCoins();
+    drawGround();
+    
+    // Update player and physics
+    updatePhysics();
+    drawBird();
+    
+    // Draw visual sparkles particles
+    updateAndDrawParticles();
+
+    // In-game score layout (floating on mid play)
+    if (gameState === 'PLAYING') {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 5;
+        ctx.font = '28px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.strokeText(score, canvas.width / 2, 80);
+        ctx.fillText(score, canvas.width / 2, 80);
+    }
+
+    ctx.restore();
+    requestAnimationFrame(drawLoop);
+}
+
+function triggerFlap() {
+    if (gameState === 'MENU' || gameState === 'GAMEOVER') return;
+    
+    if (gameState === 'GETREADY') {
+        gameState = 'PLAYING';
+        document.getElementById('ui-get-ready').classList.add('hidden');
+        spawnPipes(); // Spawn immediately
+    }
+
+    bird.velocity = jumpForce;
+    audio.playFlap();
+    createFlapParticles(bird.x, bird.y);
+}
+
+// User Interaction Listeners
+canvas.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    triggerFlap();
+});
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    triggerFlap();
+}, { passive: false });
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        triggerFlap();
+    }
+});
+
+function updateDashboardDisplay() {
+    document.getElementById('best-score-display').innerText = state.highScore;
+    document.getElementById('total-coins-display').innerText = state.coins;
+    document.getElementById('shop-coins-display').innerText = state.coins;
+}
+
+function initializeSkinsShop() {
+    const list = document.getElementById('shop-skins-list');
+    list.innerHTML = '';
+
+    SKINS.forEach(skin => {
+        // Evaluate locked states
+        const isUnlocked = state.unlockedSkins.includes(skin.id);
+        const isSelected = state.selectedSkin === skin.id;
+
+        const container = document.createElement('div');
+        container.className = `flex items-center justify-between p-3 rounded-2xl border transition-all ${isSelected ? 'bg-indigo-950/40 border-indigo-500' : 'bg-slate-900 border-slate-800'}`;
+        
+        // Render Custom Preview SVG for bird Skin inside list item
+        const svgPreview = `
+            <svg class="w-10 h-10 overflow-visible" viewBox="0 0 30 30">
+                <circle cx="15" cy="15" r="10" fill="${skin.color}" stroke="#000" stroke-width="1.5" />
+                <ellipse cx="11" cy="15" rx="5" ry="3" fill="rgba(255,255,255,0.7)" stroke="#000" stroke-width="1" transform="rotate(20 11 15)" />
+                <circle cx="18" cy="12" r="3.5" fill="#fff" stroke="#000" stroke-width="1" />
+                <circle cx="19" cy="12" r="1.5" fill="${skin.eyeColor}" />
+                <path d="M24 13 L29 16 L24 18 Z" fill="#f97316" stroke="#000" stroke-width="1" />
+            </svg>
+        `;
+
+        container.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="p-1 bg-slate-800 rounded-xl">
+                    ${svgPreview}
+                </div>
+                <div>
+                    <div class="font-extrabold text-xs flex items-center gap-1">
+                        ${skin.name}
+                        ${isSelected ? '<span class="text-[9px] bg-indigo-500 px-2 py-0.5 rounded-full text-white font-semibold">Aktif</span>' : ''}
+                    </div>
+                    <div class="text-[9px] text-slate-400 mt-0.5">${skin.desc}</div>
+                </div>
+            </div>
+            <div class="flex items-center">
+                ${isUnlocked 
+                    ? (isSelected 
+                        ? `<button class="text-xs bg-indigo-500 text-white font-bold py-1.5 px-3 rounded-xl opacity-50 cursor-default" disabled>Terpilih</button>`
+                        : `<button onclick="selectSkin('${skin.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 font-bold py-1.5 px-3 rounded-xl transition-colors">Pilih</button>`)
+                    : `<button onclick="buySkin('${skin.id}', ${skin.price})" class="text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-1.5 px-3 rounded-xl flex items-center gap-1 shadow-md transition-colors">
+                            <i class="fas fa-coins text-[10px]"></i> ${skin.price}
+                       </button>`
+                }
+            </div>
+        `;
+        list.appendChild(container);
+    });
+}
+
+window.buySkin = function(id, price) {
+    if (state.coins >= price) {
+        state.coins -= price;
+        state.unlockedSkins.push(id);
+        state.selectedSkin = id;
+        saveState();
+        updateDashboardDisplay();
+        initializeSkinsShop();
+    } else {
+        // Trigger a localized beautiful CSS alert modal animation
+        const alertBox = document.createElement('div');
+        alertBox.className = "absolute top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white font-bold text-xs py-2.5 px-6 rounded-full shadow-lg z-50 animate-bounce flex items-center gap-2";
+        alertBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Koin emas tidak mencukupi!';
+        document.body.appendChild(alertBox);
+        setTimeout(() => alertBox.remove(), 2000);
+    }
+};
+
+window.selectSkin = function(id) {
+    state.selectedSkin = id;
+    saveState();
+    initializeSkinsShop();
+};
+
+document.getElementById('btn-play').addEventListener('click', () => {
+    document.getElementById('ui-menu').classList.add('hidden');
+    document.getElementById('ui-get-ready').classList.remove('hidden');
+    gameState = 'GETREADY';
+    resetGameEngine();
+});
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+    document.getElementById('ui-gameover').classList.add('hidden');
+    document.getElementById('ui-get-ready').classList.remove('hidden');
+    gameState = 'GETREADY';
+    resetGameEngine();
+});
+
+document.getElementById('btn-home').addEventListener('click', () => {
+    document.getElementById('ui-gameover').classList.add('hidden');
+    document.getElementById('ui-menu').classList.remove('hidden');
+    gameState = 'MENU';
+    resetGameEngine();
+});
+
+document.getElementById('btn-shop').addEventListener('click', () => {
+    document.getElementById('ui-shop').classList.remove('hidden');
+    initializeSkinsShop();
+});
+
+document.getElementById('btn-close-shop').addEventListener('click', () => {
+    document.getElementById('ui-shop').classList.add('hidden');
+});
+
+document.getElementById('btn-gameover-shop').addEventListener('click', () => {
+    document.getElementById('ui-gameover').classList.add('hidden');
+    document.getElementById('ui-shop').classList.remove('hidden');
+    initializeSkinsShop();
+});
+
+document.getElementById('btn-settings').addEventListener('click', () => {
+    document.getElementById('ui-settings').classList.remove('hidden');
+    syncSettingsPanel();
+});
+
+document.getElementById('btn-close-settings').addEventListener('click', () => {
+    document.getElementById('ui-settings').classList.add('hidden');
+});
+
+/* Settings Config Logic */
+const btnSound = document.getElementById('toggle-sound');
+const btnShake = document.getElementById('toggle-shake');
+const selectDifficulty = document.getElementById('difficulty-select');
+
+function syncSettingsPanel() {
+    // Sound switch styling
+    if (state.soundEnabled) {
+        btnSound.className = "w-14 h-8 bg-emerald-500 rounded-full p-1 transition-all flex items-center justify-end cursor-pointer";
+    } else {
+        btnSound.className = "w-14 h-8 bg-slate-800 rounded-full p-1 transition-all flex items-center justify-start cursor-pointer";
+    }
+
+    // Shake switch styling
+    if (state.screenShake) {
+        btnShake.className = "w-14 h-8 bg-emerald-500 rounded-full p-1 transition-all flex items-center justify-end cursor-pointer";
+    } else {
+        btnShake.className = "w-14 h-8 bg-slate-800 rounded-full p-1 transition-all flex items-center justify-start cursor-pointer";
+    }
+
+    selectDifficulty.value = state.difficulty;
+}
+
+btnSound.addEventListener('click', () => {
+    state.soundEnabled = !state.soundEnabled;
+    audio.enabled = state.soundEnabled;
+    saveState();
+    syncSettingsPanel();
+});
+
+btnShake.addEventListener('click', () => {
+    state.screenShake = !state.screenShake;
+    saveState();
+    syncSettingsPanel();
+});
+
+selectDifficulty.addEventListener('change', (e) => {
+    state.difficulty = e.target.value;
+    saveState();
+    adjustDifficultySettings();
+});
+
+function adjustDifficultySettings() {
+    if (state.difficulty === 'easy') {
+        speedFactor = 2.0;
+        pipeGap = 150;
+        gravity = 0.35;
+        jumpForce = -6.8;
+    } else if (state.difficulty === 'hard') {
+        speedFactor = 3.2;
+        pipeGap = 120;
+        gravity = 0.45;
+        jumpForce = -8.0;
+    } else { // normal
+        speedFactor = 2.4;
+        pipeGap = 135;
+        gravity = 0.4;
+        jumpForce = -7.5;
+    }
+}
+
+/* Simulated Android Navigation Keys */
+document.getElementById('android-back').addEventListener('click', () => {
+    if (!document.getElementById('ui-shop').classList.contains('hidden')) {
+        document.getElementById('ui-shop').classList.add('hidden');
+    } else if (!document.getElementById('ui-settings').classList.contains('hidden')) {
+        document.getElementById('ui-settings').classList.add('hidden');
+    } else if (gameState === 'GETREADY' || gameState === 'PLAYING') {
+        gameState = 'MENU';
+        document.getElementById('ui-get-ready').classList.add('hidden');
+        document.getElementById('ui-menu').classList.remove('hidden');
+        resetGameEngine();
+    }
+});
+
+document.getElementById('android-home').addEventListener('click', () => {
+    document.getElementById('ui-shop').classList.add('hidden');
+    document.getElementById('ui-settings').classList.add('hidden');
+    document.getElementById('ui-gameover').classList.add('hidden');
+    document.getElementById('ui-get-ready').classList.add('hidden');
+    document.getElementById('ui-menu').classList.remove('hidden');
+    gameState = 'MENU';
+    resetGameEngine();
+});
+
+// Sync clock for real-time mobile simulator look
+function updateAndroidClock() {
+    const timeDisplay = document.getElementById('android-time');
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    timeDisplay.innerText = `${hours}:${minutes}`;
+}
+setInterval(updateAndroidClock, 10000);
+updateAndroidClock();
+
+function resetGameEngine() {
+    pipes = [];
+    coins = [];
+    particles = [];
+    score = 0;
+    coinsEarnedThisRun = 0;
+    spawnTimer = 0;
+    
+    bird.x = 80;
+    bird.y = canvas.height / 2;
+    bird.velocity = 0;
+    bird.rotation = 0;
+    
+    adjustDifficultySettings();
+    updateDashboardDisplay();
+}
+
+/* Init Engine & Loop on boot ready */
+window.onload = function() {
+    updateDashboardDisplay();
+    resetGameEngine();
+    drawLoop();
+};
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+</body>
+</html>
